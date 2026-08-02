@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Smart Insole for Runners &amp; Cyclists</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b1016;color:#e6edf5;
+  font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;
+  padding:26px 20px 60px;-webkit-text-size-adjust:100%}
+.wrap{max-width:780px;margin:0 auto}
+
+.hero{text-align:center;padding:22px 0 32px}
+.hero .badge{display:inline-block;font:600 11px ui-monospace,monospace;letter-spacing:1.4px;
+  text-transform:uppercase;color:#00c86f;background:rgba(0,200,111,.1);
+  border:1px solid rgba(0,200,111,.3);border-radius:999px;padding:6px 14px;margin-bottom:18px}
+h1{font-size:clamp(24px,6vw,34px);line-height:1.2;letter-spacing:-.6px;margin-bottom:12px}
+h1 em{font-style:normal;color:#00c86f}
+.hero p{color:#8798ab;font-size:15.5px;max-width:520px;margin:0 auto}
+
+.cta{display:block;background:#00c86f;color:#06131c;text-decoration:none;
+  border-radius:14px;padding:19px 24px;margin:30px 0 12px;
+  font:700 17px system-ui;text-align:center;transition:.16s}
+.cta:active{transform:scale(.985)}
+.cta small{display:block;font:500 13px system-ui;opacity:.72;margin-top:4px}
+
+.links{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:34px}
+@media(max-width:520px){.links{grid-template-columns:1fr}}
+.links a{background:#131a24;border:1px solid #1e2836;border-radius:12px;
+  padding:15px 16px;text-decoration:none;color:#cfdbe8;transition:.16s}
+.links a:active{background:#182231}
+.links b{display:block;font:600 14.5px system-ui;margin-bottom:2px}
+.links span{font-size:12.5px;color:#7d8fa3}
+
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1.1px;color:#7d8fa3;
+  margin:34px 0 14px;font-weight:600}
+
+.card{background:#111823;border:1px solid #1e2836;border-radius:14px;
+  padding:18px 20px;margin-bottom:12px}
+.card h3{font-size:16px;margin-bottom:6px}
+.card h3 .ic{margin-right:8px}
+.card p{font-size:14.5px;color:#9fb0c3}
+.card ul{margin:10px 0 0 20px;font-size:14.5px;color:#9fb0c3}
+.card li{margin-bottom:4px}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #1a2331}
+th{font:600 11.5px ui-monospace,monospace;text-transform:uppercase;
+  letter-spacing:.7px;color:#7d8fa3}
+td code{font:12.5px ui-monospace,monospace;color:#4a9eff;
+  background:rgba(74,158,255,.09);padding:2px 6px;border-radius:5px}
+tr:last-child td{border-bottom:0}
+
+footer{text-align:center;color:#5b6b7f;font-size:13px;margin-top:40px;
+  padding-top:22px;border-top:1px solid #1a2331}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="badge">ESP32 · BLE · Flutter</div>
+    <h1>Smart Insole for <em>Runners</em> &amp; <em>Cyclists</em></h1>
+    <p>แผ่นรองในรองเท้าวัดแรงกด 4 จุด ส่งข้อมูลผ่าน BLE ที่ 10 Hz
+       วิเคราะห์ท่าวิ่งและประสิทธิภาพการปั่นแบบเรียลไทม์</p>
+  </div>
+
+  <a class="cta" href="smart_insole_project/simulator.html">
+    เปิดเครื่องมือจำลอง
+    <small>ไม่ต้องมีฮาร์ดแวร์ — ทำงานในเบราว์เซอร์ทันที</small>
+  </a>
+
+  <div class="links">
+    <a href="smart_insole_project/TESTING.md">
+      <b>คู่มือการทดสอบ</b>
+      <span>5 ขั้นตอน จากจำลองถึงฮาร์ดแวร์จริง</span>
+    </a>
+    <a href="smart_insole_project/firmware/smart_insole.ino">
+      <b>ESP32 Firmware</b>
+      <span>อ่าน FSR + GPS ส่งผ่าน BLE</span>
+    </a>
+    <a href="smart_insole_project/flutter_app/lib/main.dart">
+      <b>Flutter App</b>
+      <span>โค้ดแอปมือถือทั้งหมด</span>
+    </a>
+    <a href="smart_insole_project/ai_image_prompts.md">
+      <b>AI Image Prompts</b>
+      <span>พรอมต์สำหรับทำภาพประกอบ</span>
+    </a>
+  </div>
+
+  <h2>สองโหมดกีฬา</h2>
+
+  <div class="card">
+    <h3><span class="ic">🏃</span>โหมดวิ่ง</h3>
+    <p>จำแนกรูปแบบการลงเท้าและให้คะแนนคุณภาพท่าวิ่ง มีพรีเซ็ต 4 แบบให้เทียบ
+       ทั้งท่าที่ดีและท่าที่มีปัญหา</p>
+    <ul>
+      <li>Heatmap แรงกดฝ่าเท้าแบบเรียลไทม์</li>
+      <li>วัดรอบขา ความสมมาตรซ้าย/ขวา และสัดส่วนแรงกดแต่ละโซน</li>
+      <li>เส้นทาง GPS พร้อมระยะทางและเพซ</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="ic">🚲</span>โหมดปั่นจักรยาน</h3>
+    <p>คำนวณแรงที่ส่งถึงบันไดจากแรงกดฝ่าเท้า แล้วแปลงเป็นทอร์กและกำลังเป็นวัตต์</p>
+    <ul>
+      <li>Polar diagram แสดงทอร์กเทียบมุมจานหมุน เห็นจุดตายในรอบขา</li>
+      <li>แผนที่เส้นทาง ระยะทาง และระยะไต่เขาสะสม</li>
+      <li>โปรไฟล์ระดับความสูงตลอดเส้นทาง</li>
+    </ul>
+  </div>
+
+  <h2>โมเดลฟิสิกส์โหมดจักรยาน</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>ปริมาณ</th><th>สูตร</th></tr></thead>
+      <tbody>
+        <tr><td>แรงตั้งฉากบันได</td><td><code>Fn = ΣADC/(4×4095) × 800 N</code></td></tr>
+        <tr><td>องค์ประกอบแนวสัมผัส</td><td><code>Ft = Fn × sin θ</code></td></tr>
+        <tr><td>ทอร์กที่จานหมุน</td><td><code>τ = Ft × 0.1725 m</code></td></tr>
+        <tr><td>กำลังขับ</td><td><code>P = τ̄ × ω × 2 ขา</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>ฮาร์ดแวร์</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>ชิ้นส่วน</th><th>ขา ESP32</th></tr></thead>
+      <tbody>
+        <tr><td>FSR ส้นเท้า</td><td><code>GPIO 34</code></td></tr>
+        <tr><td>FSR ปลายเท้าซ้าย</td><td><code>GPIO 35</code></td></tr>
+        <tr><td>FSR ปลายเท้าขวา</td><td><code>GPIO 32</code></td></tr>
+        <tr><td>FSR นิ้วเท้า</td><td><code>GPIO 33</code></td></tr>
+        <tr><td>GPS NEO-6M</td><td><code>Serial2 · RX 16 / TX 17</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    เปิดหน้านี้บน iPad ได้เลย — กดปุ่มแชร์แล้วเลือก Add to Home Screen
+    เพื่อใช้แบบเต็มหน้าจอ
+  </footer>
+
+</div>
+</body>
+</html>

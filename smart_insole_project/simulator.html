@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Insole — Multi-Sport Simulator</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b1016;color:#e6edf5;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:18px}
+.wrap{max-width:1240px;margin:0 auto}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:19px;letter-spacing:-.3px}
+h1 span{color:#00c86f}
+.dot{width:9px;height:9px;border-radius:50%;background:#3d4b5c;transition:.3s}
+.dot.on{background:#00c86f;box-shadow:0 0 10px #00c86f}
+.conn{font-size:12px;color:#8798ab;font-family:ui-monospace,monospace}
+
+/* ---------- sport toggle ---------- */
+.sports{display:flex;gap:6px;background:#131a24;padding:5px;border-radius:12px;border:1px solid #1e2836}
+.sport{padding:8px 18px;border:0;border-radius:8px;background:transparent;color:#8798ab;
+  font:600 13px system-ui;cursor:pointer;transition:.18s;display:flex;align-items:center;gap:7px}
+.sport:hover{color:#cfdbe8}
+.sport.act{background:#00c86f;color:#06131c}
+.sport.act.cyc{background:#4a9eff;color:#06131c}
+
+/* ---------- controls ---------- */
+.ctl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#111823;
+  border:1px solid #1e2836;border-radius:14px;padding:14px 16px;margin-bottom:16px}
+.ctl label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#7d8fa3;
+  display:block;margin-bottom:5px;font-weight:600}
+select,input[type=range]{background:#0d141d;color:#e6edf5;border:1px solid #263140;
+  border-radius:8px;padding:8px 10px;font:13px system-ui}
+select{min-width:250px;cursor:pointer}
+input[type=range]{padding:0;width:170px;accent-color:#00c86f}
+button{border:0;border-radius:10px;padding:11px 22px;font:700 13px system-ui;cursor:pointer;
+  background:#00c86f;color:#06131c;transition:.15s}
+button:hover{filter:brightness(1.12)}
+button.stop{background:#f8514a;color:#fff}
+button.ghost{background:#1b2532;color:#a8b8c9}
+.val{font:600 13px ui-monospace,monospace;color:#00c86f;min-width:74px;display:inline-block}
+
+/* ---------- verdict banner ---------- */
+.verdict{display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:12px;
+  margin-bottom:16px;border:1px solid;font-size:13.5px;line-height:1.45}
+.verdict.good{background:rgba(0,200,111,.09);border-color:rgba(0,200,111,.4)}
+.verdict.bad{background:rgba(248,81,74,.09);border-color:rgba(248,81,74,.4)}
+.verdict .ico{font-size:21px;line-height:1}
+.verdict b{display:block;font-size:14px;margin-bottom:2px}
+.verdict.good b{color:#00c86f}
+.verdict.bad b{color:#ff7b74}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:322px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:#111823;border:1px solid #1e2836;border-radius:14px;padding:15px}
+.card h2{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:#7d8fa3;
+  margin-bottom:12px;font-weight:700}
+canvas{display:block;max-width:100%}
+
+/* ---------- zone chips ---------- */
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.zone{background:#0d141d;border:1px solid #1e2836;border-radius:9px;padding:8px;text-align:center}
+.zone b{display:block;font:700 16px ui-monospace,monospace;color:#e6edf5}
+.zone span{font-size:10px;color:#7d8fa3;text-transform:uppercase;letter-spacing:.5px}
+.zone i{display:block;font:600 10px ui-monospace,monospace;color:#4a9eff;font-style:normal;margin-top:2px}
+
+/* ---------- metrics ---------- */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px}
+@media(max-width:640px){.metrics{grid-template-columns:1fr 1fr}}
+.m{background:#111823;border:1px solid #1e2836;border-radius:12px;padding:13px}
+.m span{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#7d8fa3;font-weight:600}
+.m b{display:block;font:700 25px/1.15 ui-monospace,monospace;margin-top:5px}
+.m i{font-style:normal;font-size:11px;color:#5b6b7f}
+
+/* ---------- target table ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;
+  color:#7d8fa3;padding:0 8px 8px;font-weight:700}
+td{padding:8px;border-top:1px solid #1a2330;font-family:ui-monospace,monospace}
+td.n{color:#a8b8c9;font-family:system-ui}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font:700 10.5px system-ui}
+.pill.ok{background:rgba(0,200,111,.16);color:#00c86f}
+.pill.no{background:rgba(248,81,74,.16);color:#ff7b74}
+
+/* ---------- score ---------- */
+.scoreNum{flex:0 0 auto;text-align:center;padding-left:10px}
+.scoreNum b{display:block;font-size:30px;line-height:1;color:#e6edf3;font-variant-numeric:tabular-nums}
+.scoreNum span{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#5b6b7f}
+.score{display:flex;align-items:center;gap:15px}
+.score .txt b{display:block;font-size:16px;margin-bottom:3px}
+.score .txt p{font-size:12.5px;color:#93a3b6;line-height:1.5}
+
+/* ---------- log / formula ---------- */
+.log{background:#080c11;border:1px solid #1a2330;border-radius:10px;padding:10px;
+  height:118px;overflow-y:auto;font:11px/1.65 ui-monospace,monospace}
+.ln{color:#5d7590;white-space:nowrap}
+.ln:first-child{color:#00c86f}
+.fx{background:#0d141d;border:1px solid #1e2836;border-radius:9px;padding:11px;
+  font:11.5px/1.8 ui-monospace,monospace;color:#8798ab}
+.fx em{color:#4a9eff;font-style:normal}
+.hint{font-size:11.5px;color:#6b7d91;margin-top:9px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Smart <span>Insole</span> — Multi-Sport Simulator</h1>
+  <div class="sports">
+    <button class="sport act" id="spRun">🏃 Running</button>
+    <button class="sport" id="spCyc">🚴 Cycling</button>
+  </div>
+  <div style="flex:1"></div>
+  <div class="dot" id="dot"></div>
+  <div class="conn" id="connTxt">Disconnected</div>
+</header>
+
+<div class="ctl">
+  <div>
+    <label id="presetLbl">Form example</label>
+    <select id="preset"></select>
+  </div>
+  <div>
+    <label id="rateLbl">Cadence</label>
+    <input type="range" id="rate" min="150" max="200" value="180">
+    <span class="val" id="rateVal">180 spm</span>
+  </div>
+  <div style="flex:1"></div>
+  <button id="btn">Start</button>
+  <button class="ghost" id="reset">Reset</button>
+</div>
+
+<div class="verdict good" id="verdict">
+  <div class="ico" id="vIco">✓</div>
+  <div><b id="vTitle">Pick an example and press Start</b>
+  <span id="vText">Each example reproduces a real form pattern so you can compare good against bad.</span></div>
+</div>
+
+<div class="grid">
+
+  <!-- ============ LEFT: foot pressure ============ -->
+  <div>
+    <div class="card">
+      <h2 id="footTitle">Live Pressure Heatmap</h2>
+      <canvas id="foot" width="292" height="458"></canvas>
+      <div class="zones" id="zones"></div>
+      <p class="hint" id="footHint">Green = light load, red = heavy load. Values are raw 12-bit ADC (0–4095).</p>
+    </div>
+  </div>
+
+  <!-- ============ RIGHT ============ -->
+  <div>
+    <div class="metrics" id="metrics"></div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2 id="scoreTitle">Quality Analysis</h2>
+      <div class="score">
+        <canvas id="ring" width="76" height="76" style="flex:0 0 76px"></canvas>
+        <div class="txt">
+          <b id="sLabel">—</b>
+          <p id="sFeed">Press Start to begin streaming.</p>
+        </div>
+        <div class="scoreNum"><b id="sNum">--</b><span>score</span></div>
+      </div>
+      <table style="margin-top:14px">
+        <thead><tr><th>Metric</th><th>Live</th><th>Target</th><th>Status</th></tr></thead>
+        <tbody id="tgt"></tbody>
+      </table>
+    </div>
+
+    <!-- swaps between GPS map (run) and pedal polar (cycle) -->
+    <div class="card" style="margin-bottom:16px">
+      <h2 id="vizTitle">GPS Track</h2>
+      <canvas id="map" width="820" height="228"></canvas>
+      <canvas id="polar" width="820" height="300" style="display:none"></canvas>
+      <div class="fx" id="formula" style="display:none;margin-top:12px"></div>
+      <canvas id="cycleMap" width="820" height="310" style="display:none;margin-top:14px;width:100%;border-radius:8px"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>BLE Notify Stream — 10 Hz</h2>
+      <div class="log" id="log"></div>
+      <p class="hint">Identical JSON keys the ESP32 firmware transmits over the notify characteristic.</p>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+// ============================================================
+//  SMART INSOLE MULTI-SPORT SIMULATOR
+//  Mirrors the real pipeline:
+//    ESP32 firmware -> synth()  builds the same JSON keys
+//    BLE notify     -> tick()   fires every 100 ms (10 Hz)
+//    Flutter app    -> draw*/analyse*  render + score it
+// ============================================================
+
+const MAX  = 4095;      // 12-bit ADC, same as firmware
+const HZ   = 100;       // notify period (ms) -> 10 Hz
+
+// ---- cycling biomechanics constants ------------------------
+const CRANK  = 0.1725;  // m, standard crank arm length
+const F_FULL = 800;     // N, normal force at full-scale ADC sum
+
+// ============================================================
+//  PRESETS — each reproduces a real, documented form pattern.
+//  Zone tuple = [centre, width, amplitude] over the cycle 0..1
+//  `up` = residual load during recovery/upstroke phase
+// ============================================================
+const PRESETS = {
+run: [
+  { id:'good_mid', good:true,  name:'✓ GOOD — Efficient midfoot strike',
+    rate:180,
+    heel:[.20,.15,.60], fl:[.38,.17,1.00], fr:[.40,.17,.96], toe:[.62,.15,.72],
+    title:'Efficient midfoot strike',
+    text:'Contact under the centre of mass, balanced left/right, high cadence. Lowest impact loading and best economy — this is the reference pattern.' },
+
+  { id:'bad_heel', good:false, name:'✗ BAD — Overstriding heel strike',
+    rate:158,
+    heel:[.09,.11,1.00], fl:[.45,.15,.62], fr:[.47,.15,.58], toe:[.72,.13,.40],
+    title:'Overstriding heel strike',
+    text:'Sharp heel spike far ahead of the body with low cadence. Acts as a braking force each step and drives impact up the tibia — the classic overuse-injury pattern.' },
+
+  { id:'bad_asym', good:false, name:'✗ BAD — Asymmetric, left dominant',
+    rate:172,
+    heel:[.14,.13,.88], fl:[.40,.16,1.00], fr:[.44,.16,.46], toe:[.66,.14,.55],
+    title:'Asymmetric loading — left dominant',
+    text:'The left forefoot carries roughly twice the load of the right. Persistent asymmetry is strongly linked to unilateral injury; check leg-length difference, old injury or a cambered running surface.' },
+
+  { id:'bad_fore', good:false, name:'✗ BAD — Excessive forefoot / calf overload',
+    rate:186,
+    heel:[.30,.10,.14], fl:[.30,.16,1.00], fr:[.32,.16,.95], toe:[.48,.18,.98],
+    title:'Excessive forefoot loading',
+    text:'Almost no heel contact — the calf and Achilles absorb nearly all the load. Efficient in short bursts but a common route to Achilles tendinopathy over distance.' },
+],
+cycle: [
+  { id:'good_round', good:true,  name:'✓ GOOD — Smooth round pedal stroke',
+    rate:90, up:.03,
+    heel:[.20,.16,.16], fl:[.29,.20,.92], fr:[.30,.20,.86], toe:[.38,.18,.62],
+    title:'Smooth round pedal stroke',
+    text:'Force builds early and stays applied through the full downstroke, with active ankling carrying it over the bottom. High torque effectiveness and almost no wasted negative torque.' },
+
+  { id:'bad_mash', good:false, name:'✗ BAD — Mashing with dead spots',
+    rate:72, up:.15,
+    heel:[.24,.12,.30], fl:[.25,.11,1.00], fr:[.25,.11,.94], toe:[.28,.10,.34],
+    title:'Mashing — dead spots in the stroke',
+    text:'One violent stab near 90° then nothing, with weight resting on the pedal through the upstroke. That resting load produces negative torque, so the other leg has to drag this one round.' },
+
+  { id:'bad_heeldrop', good:false, name:'✗ BAD — Heel dropping, no ankling',
+    rate:82, up:.10,
+    heel:[.26,.20,.72], fl:[.30,.18,.70], fr:[.31,.18,.62], toe:[.40,.14,.18],
+    title:'Heel dropping, no ankling',
+    text:'The heel collapses below the pedal spindle and the toe never drives through. Force arrives late and dies at the bottom of the stroke, wasting a large part of each revolution.' },
+
+  { id:'bad_toe',  good:false, name:'✗ BAD — Toe pointing / calf overload',
+    rate:95, up:.05,
+    heel:[.22,.10,.05], fl:[.28,.18,.80], fr:[.29,.18,.72], toe:[.30,.16,.98],
+    title:'Toe pointing — calf overload',
+    text:'Ankle locked plantar-flexed, so the calf is stabilising instead of the glutes and quads driving. Peak force looks acceptable but the calf fatigues long before the big muscles do.' },
+]};
+
+// ---- targets used for the pass/fail table -------------------
+const TARGETS = {
+  run: [
+    { key:'cad',  label:'Cadence',        unit:' spm', test:v=>v>=170,            want:'≥ 170', w:1.5 },
+    { key:'sym',  label:'L/R Symmetry',   unit:' %',   test:v=>v>=85,             want:'≥ 85',  w:2   },
+    { key:'heel', label:'Heel Load Share',unit:' %',   test:v=>v>=8&&v<=32,       want:'8–32',   w:1   },
+    { key:'toe',  label:'Toe Load Share', unit:' %',   test:v=>v<=30,             want:'≤ 30',   w:1   },
+  ],
+  cycle: [
+    { key:'smo',  label:'Pedal Smoothness',   unit:' %', test:v=>v>=18,       want:'≥ 18',  w:1.5 },
+    { key:'eff',  label:'Torque Effectiveness',unit:' %',test:v=>v>=75,       want:'≥ 75',  w:1.5 },
+    { key:'heel', label:'Heel Load Share',    unit:' %', test:v=>v<=20,       want:'≤ 20',  w:1   },
+    { key:'toe',  label:'Toe Load Share',     unit:' %', test:v=>v>=12&&v<=35,want:'12–35', w:2   },
+  ]
+};
+
+// ---- runtime state -----------------------------------------
+let sport='run', preset=PRESETS.run[0];
+let running=false, timer=null, tick_=0, dist=0, path=[], hist=[], torqueBuf=[];
+let elevPath=[], elevGain=0, lastElev=null;
+const BASE_LAT=13.7563, BASE_LNG=100.5018;   // Bangkok
+
+// ---- pressure -> colour, identical ramp to PressureAnalyzer -
+function pressureColor(n){
+  n=Math.max(0,Math.min(1,n)); let r,g,b;
+  if(n<.5){const t=n/.5;      r=Math.round(0+t*227);        g=Math.round(200+t*(192-200)); b=Math.round(111-t*86);}
+  else    {const t=(n-.5)/.5; r=Math.round(227+t*(248-227)); g=Math.round(192-t*(192-81));  b=Math.round(25+t*(73-25));}
+  return [r,g,b];
+}
+const rgb=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+
+// ============================================================
+//  SYNTHESISE ONE 100 ms FRAME  (what the ESP32 would notify)
+// ============================================================
+function synth(){
+  const rate = +document.getElementById('rate').value;
+  // cycle duration: running = 1 step, cycling = 1 crank revolution
+  const cycleSec  = sport==='run' ? 60/rate*2 : 60/rate;
+  const cycleTicks= Math.max(4, Math.round(cycleSec*1000/HZ));
+  const phase = (tick_ % cycleTicks)/cycleTicks;
+
+  // wrapped gaussian so the pulse is smooth across the cycle seam
+  const bell=([c,w])=>{ let d=Math.abs(phase-c); if(d>.5) d=1-d; return Math.exp(-Math.pow(d/w,2)); };
+  const up = preset.up||0;
+  const q=(zone)=>{
+    const v = bell(zone)*zone[2] + up*(sport==='cycle'&&phase>.5?1:0);
+    return Math.min(MAX, Math.round(v*3400 + Math.random()*170));
+  };
+
+  const d = { h:q(preset.heel), fl:q(preset.fl), fr:q(preset.fr), t:q(preset.toe) };
+
+  if(sport==='run'){
+    const pace = Math.max(3.2, 1000/(rate*1.02));          // spm -> min/km approximation
+    const speed = 60/pace;
+    dist += speed/3600*(HZ/1000);
+    const ang = tick_*0.006;
+    Object.assign(d,{
+      pace:+pace.toFixed(2), dist:+dist.toFixed(3),
+      lat:+(BASE_LAT+Math.sin(ang)*0.0042).toFixed(6),
+      lng:+(BASE_LNG+Math.cos(ang)*0.0042).toFixed(6),
+      spd:+speed.toFixed(1), cad:rate
+    });
+  } else {
+    // ---- pedal force model ---------------------------------
+    // Normal force on the pedal from the summed insole zones.
+    const sumN = (d.h+d.fl+d.fr+d.t)/(4*MAX);      // 0..1
+    const Fn   = sumN*F_FULL;                      // Newtons
+    // Crank angle: 0 deg = top dead centre, increases forward.
+    const theta = phase*2*Math.PI;
+    // Only the component tangential to the crank circle does work.
+    const Ftan  = Fn*Math.sin(theta);
+    const torque= Ftan*CRANK;                      // N.m
+    const omega = rate*2*Math.PI/60;               // rad/s
+    torqueBuf.push(torque);
+    if(torqueBuf.length>cycleTicks) torqueBuf.shift();
+    // Mean torque over a full revolution x omega x 2 legs
+    const meanT = torqueBuf.reduce((a,b)=>a+b,0)/torqueBuf.length;
+    const power = Math.max(0, meanT*omega*2);
+    dist += (rate*0.0021)/3600*(HZ/1000)*1000;      // crude gear-based distance
+    const ang = tick_*0.006;
+    Object.assign(d,{
+      pwr:Math.round(power), cad:rate,
+      fn:Math.round(Fn), ftan:Math.round(Ftan), trq:+torque.toFixed(1),
+      dist:+dist.toFixed(3),
+      lat:+(BASE_LAT+Math.sin(ang)*0.0042).toFixed(6),
+      lng:+(BASE_LNG+Math.cos(ang)*0.0042).toFixed(6),
+      elev:+(50+25*Math.sin(dist*Math.PI/0.006)+8*Math.sin(dist*Math.PI/0.0018)+(Math.random()-.5)*0.8).toFixed(1),
+      spd:+(rate*0.42).toFixed(1)
+    });
+  }
+  d._phase = phase;
+  return d;
+}
+
+// ============================================================
+//  FOOT HEATMAP  (mirrors FootHeatmapPainter)
+// ============================================================
+const fc=document.getElementById('foot'), fx=fc.getContext('2d');
+const ZONES=[
+  {key:'h', name:'Heel',       x:150,y:390,r:74},
+  {key:'fl',name:'Forefoot L', x:104,y:196,r:62},
+  {key:'fr',name:'Forefoot R', x:196,y:196,r:62},
+  {key:'t', name:'Toe',        x:150,y:96, r:56},
+];
+function footPath(){
+  const p=new Path2D();
+  p.moveTo(150,34);
+  p.bezierCurveTo(196,34,224,72,224,124);
+  p.bezierCurveTo(224,168,214,196,210,232);
+  p.bezierCurveTo(206,272,214,300,212,338);
+  p.bezierCurveTo(210,398,186,442,150,442);
+  p.bezierCurveTo(114,442,90,398,88,338);
+  p.bezierCurveTo(86,300,94,272,90,232);
+  p.bezierCurveTo(86,196,76,168,76,124);
+  p.bezierCurveTo(76,72,104,34,150,34);
+  p.closePath(); return p;
+}
+const FOOT=footPath();
+
+function drawFoot(d){
+  fx.clearRect(0,0,300,470);
+  fx.save(); fx.clip(FOOT);
+  fx.fillStyle='#131a24'; fx.fillRect(0,0,300,470);
+  for(const z of ZONES){
+    const n=d?d[z.key]/MAX:0; if(n<.02) continue;
+    const c=pressureColor(n);
+    const g=fx.createRadialGradient(z.x,z.y,0,z.x,z.y,z.r*(.72+n*.42));
+    g.addColorStop(0,rgb(c,.95*n+.05)); g.addColorStop(.55,rgb(c,.42*n)); g.addColorStop(1,rgb(c,0));
+    fx.fillStyle=g; fx.beginPath(); fx.arc(z.x,z.y,z.r*1.5,0,7); fx.fill();
+  }
+  fx.restore();
+  fx.strokeStyle='rgba(140,170,200,.55)'; fx.lineWidth=2; fx.stroke(FOOT);
+  fx.font='bold 11px ui-monospace,monospace'; fx.textAlign='center';
+  for(const z of ZONES){
+    const v=d?d[z.key]:0;
+    fx.fillStyle='rgba(0,0,0,.5)'; fx.beginPath(); fx.arc(z.x,z.y,17,0,7); fx.fill();
+    fx.fillStyle='#dbe6f2'; fx.fillText(v,z.x,z.y+4);
+  }
+}
+const zEl=document.getElementById('zones');
+zEl.innerHTML=ZONES.map(z=>`<div class="zone"><b id="z_${z.key}">0</b><span>${z.name}</span></div>`).join('');
+
+// ============================================================
+//  SCORE RING
+// ============================================================
+const rc=document.getElementById('ring'), rx=rc.getContext('2d');
+function drawRing(score){
+  rx.clearRect(0,0,76,76); rx.lineWidth=7; rx.lineCap='round';
+  rx.strokeStyle='#1e2a38'; rx.beginPath(); rx.arc(38,38,31,0,7); rx.stroke();
+  if(score==null) return;
+  rx.strokeStyle=rgb(pressureColor(1-score/100));
+  rx.beginPath(); rx.arc(38,38,31,-Math.PI/2,-Math.PI/2+Math.PI*2*(score/100)); rx.stroke();
+}
+
+// ============================================================
+//  GPS TRACK
+// ============================================================
+const mc=document.getElementById('map'), mx=mc.getContext('2d');
+function drawMap(){
+  const W=mc.width,H=mc.height;
+  mx.fillStyle='#0f151d'; mx.fillRect(0,0,W,H);
+  mx.strokeStyle='rgba(255,255,255,.04)'; mx.lineWidth=1;
+  for(let x=0;x<W;x+=40){mx.beginPath();mx.moveTo(x,0);mx.lineTo(x,H);mx.stroke();}
+  for(let y=0;y<H;y+=40){mx.beginPath();mx.moveTo(0,y);mx.lineTo(W,y);mx.stroke();}
+  if(path.length<2){ mx.fillStyle='#5b6b7f'; mx.font='13px system-ui'; mx.textAlign='center';
+    mx.fillText('GPS track appears once the session starts',W/2,H/2); return; }
+  const lats=path.map(p=>p[0]),lngs=path.map(p=>p[1]);
+  const la0=Math.min(...lats),la1=Math.max(...lats),ln0=Math.min(...lngs),ln1=Math.max(...lngs);
+  const pad=26, sx=v=>pad+(v-ln0)/((ln1-ln0)||1e-9)*(W-pad*2), sy=v=>H-pad-(v-la0)/((la1-la0)||1e-9)*(H-pad*2);
+  mx.strokeStyle='#00c86f'; mx.lineWidth=3; mx.lineJoin='round';
+  mx.shadowColor='rgba(0,200,111,.5)'; mx.shadowBlur=8;
+  mx.beginPath(); mx.moveTo(sx(path[0][1]),sy(path[0][0]));
+  for(const p of path) mx.lineTo(sx(p[1]),sy(p[0]));
+  mx.stroke(); mx.shadowBlur=0;
+  const s=path[0],e=path[path.length-1];
+  mx.fillStyle='#4a9eff'; mx.beginPath(); mx.arc(sx(s[1]),sy(s[0]),5,0,7); mx.fill();
+  mx.fillStyle='#fff';    mx.beginPath(); mx.arc(sx(e[1]),sy(e[0]),6,0,7); mx.fill();
+  mx.fillStyle='#00c86f'; mx.beginPath(); mx.arc(sx(e[1]),sy(e[0]),3.5,0,7); mx.fill();
+}
+
+
+// ============================================================
+//  CYCLE ROUTE MAP + ELEVATION PROFILE
+// ============================================================
+const cmEl=document.getElementById('cycleMap'), cmx=cmEl.getContext('2d');
+function drawCycleMap(){
+  const W=cmEl.width, H=cmEl.height;
+  const MAP_H=Math.round(H*0.56), ELV_H=H-MAP_H;
+  cmx.clearRect(0,0,W,H);
+
+  // ── Route map (top) ──────────────────────────────────────────
+  cmx.fillStyle='#0f151d'; cmx.fillRect(0,0,W,MAP_H);
+  cmx.strokeStyle='rgba(255,255,255,.04)'; cmx.lineWidth=1;
+  for(let x=0;x<W;x+=40){cmx.beginPath();cmx.moveTo(x,0);cmx.lineTo(x,MAP_H);cmx.stroke();}
+  for(let y=0;y<MAP_H;y+=40){cmx.beginPath();cmx.moveTo(0,y);cmx.lineTo(W,y);cmx.stroke();}
+
+  if(path.length>=2){
+    const lats=path.map(p=>p[0]),lngs=path.map(p=>p[1]);
+    const la0=Math.min(...lats),la1=Math.max(...lats);
+    const ln0=Math.min(...lngs),ln1=Math.max(...lngs);
+    const pad=30;
+    const sx=v=>pad+(v-ln0)/((ln1-ln0)||1e-9)*(W-pad*2);
+    const sy=v=>MAP_H-pad-(v-la0)/((la1-la0)||1e-9)*(MAP_H-pad*2);
+    // colour segments by elevation (purple=low → yellow=high)
+    if(elevPath.length>=2){
+      const elevs=elevPath.map(e=>e[1]);
+      const eMin=Math.min(...elevs), eRange=(Math.max(...elevs)-eMin)||1;
+      for(let i=1;i<path.length;i++){
+        const t=Math.min(1,Math.max(0,((elevs[i]||0)-eMin)/eRange));
+        const r=Math.round(74+t*(255-74)), g=Math.round(84+t*(193-84)), b=Math.round(255+t*(7-255));
+        cmx.strokeStyle=`rgba(${r},${g},${b},.92)`;
+        cmx.lineWidth=3; cmx.lineJoin='round';
+        cmx.beginPath();
+        cmx.moveTo(sx(path[i-1][1]),sy(path[i-1][0]));
+        cmx.lineTo(sx(path[i][1]),sy(path[i][0]));
+        cmx.stroke();
+      }
+    } else {
+      cmx.strokeStyle='#4a9eff'; cmx.lineWidth=3; cmx.lineJoin='round';
+      cmx.beginPath(); cmx.moveTo(sx(path[0][1]),sy(path[0][0]));
+      for(const p of path) cmx.lineTo(sx(p[1]),sy(p[0]));
+      cmx.stroke();
+    }
+    // Start / current-position dots
+    const sp=path[0], ep=path[path.length-1];
+    cmx.fillStyle='#00c86f'; cmx.beginPath(); cmx.arc(sx(sp[1]),sy(sp[0]),5,0,7); cmx.fill();
+    cmx.fillStyle='#fff'; cmx.beginPath(); cmx.arc(sx(ep[1]),sy(ep[0]),6,0,7); cmx.fill();
+    cmx.fillStyle='#4a9eff'; cmx.beginPath(); cmx.arc(sx(ep[1]),sy(ep[0]),3.5,0,7); cmx.fill();
+    // Compass label
+    cmx.fillStyle='rgba(91,107,127,.7)'; cmx.font='10px ui-monospace,monospace'; cmx.textAlign='left';
+    cmx.fillText('N↑',W-26,20);
+  } else {
+    cmx.fillStyle='#5b6b7f'; cmx.font='13px system-ui'; cmx.textAlign='center';
+    cmx.fillText('เส้นทางจะปรากฏเมื่อเริ่มต้นเซสชัน',W/2,MAP_H/2);
+  }
+
+  // Stats overlays
+  const rnd=(ctx,x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();};
+  cmx.fillStyle='rgba(9,13,20,.78)'; rnd(cmx,8,8,144,46,7); cmx.fill();
+  cmx.textAlign='left';
+  cmx.fillStyle='#4a9eff'; cmx.font='bold 10px system-ui'; cmx.fillText('🚲  ระยะทาง',18,25);
+  cmx.fillStyle='#e6edf5'; cmx.font='bold 15px ui-monospace,monospace'; cmx.fillText(dist.toFixed(2)+' km',18,44);
+
+  cmx.fillStyle='rgba(9,13,20,.78)'; rnd(cmx,W-152,8,144,46,7); cmx.fill();
+  cmx.fillStyle='#ffc107'; cmx.font='bold 10px system-ui'; cmx.fillText('⛰  ไต่เขาสะสม',W-142,25);
+  cmx.fillStyle='#e6edf5'; cmx.font='bold 15px ui-monospace,monospace'; cmx.fillText(Math.round(elevGain)+' m',W-142,44);
+
+  // Divider
+  cmx.strokeStyle='#1e2836'; cmx.lineWidth=1;
+  cmx.beginPath(); cmx.moveTo(0,MAP_H); cmx.lineTo(W,MAP_H); cmx.stroke();
+
+  // ── Elevation profile (bottom) ────────────────────────────────
+  cmx.fillStyle='#0b1016'; cmx.fillRect(0,MAP_H,W,ELV_H);
+  const PL=46, PR=16, PT=10, PB=28;
+  const pw=W-PL-PR, ph=ELV_H-PT-PB;
+  if(elevPath.length>=2){
+    const xs=elevPath.map(e=>e[0]);
+    const ys=elevPath.map(e=>e[1]);
+    const x0=xs[0], x1=xs[xs.length-1]||0.001;
+    const yMin=Math.min(...ys)-3, yMax=Math.max(...ys)+3;
+    const ex=v=>PL+(v-x0)/((x1-x0)||0.001)*pw;
+    const ey=v=>MAP_H+PT+ph-(v-yMin)/((yMax-yMin)||1)*ph;
+
+    // Grid + Y labels
+    cmx.fillStyle='#5b6b7f'; cmx.font='10px ui-monospace,monospace'; cmx.textAlign='right';
+    for(let i=0;i<=4;i++){
+      const v=yMin+(yMax-yMin)*i/4;
+      cmx.fillText(Math.round(v)+'m', PL-4, ey(v)+4);
+      cmx.strokeStyle='rgba(255,255,255,.05)'; cmx.lineWidth=1;
+      cmx.beginPath(); cmx.moveTo(PL,ey(v)); cmx.lineTo(W-PR,ey(v)); cmx.stroke();
+    }
+    // X labels (km)
+    cmx.textAlign='center'; cmx.fillStyle='#5b6b7f';
+    const nX=Math.min(6, Math.ceil(xs[xs.length-1]*2)||1);
+    for(let i=0;i<=nX;i++){
+      const v=x0+(x1-x0)*i/nX;
+      cmx.fillText(v.toFixed(2)+'km', ex(v), MAP_H+ELV_H-5);
+    }
+    // Filled gradient area
+    const grad=cmx.createLinearGradient(0,MAP_H+PT,0,MAP_H+ELV_H-PB);
+    grad.addColorStop(0,'rgba(255,193,7,.60)');
+    grad.addColorStop(1,'rgba(255,193,7,.04)');
+    cmx.beginPath();
+    cmx.moveTo(ex(xs[0]),ey(ys[0]));
+    for(let i=1;i<xs.length;i++) cmx.lineTo(ex(xs[i]),ey(ys[i]));
+    cmx.lineTo(ex(xs[xs.length-1]),MAP_H+ELV_H-PB);
+    cmx.lineTo(ex(xs[0]),MAP_H+ELV_H-PB);
+    cmx.closePath(); cmx.fillStyle=grad; cmx.fill();
+    // Stroke line
+    cmx.beginPath(); cmx.moveTo(ex(xs[0]),ey(ys[0]));
+    for(let i=1;i<xs.length;i++) cmx.lineTo(ex(xs[i]),ey(ys[i]));
+    cmx.strokeStyle='#ffc107'; cmx.lineWidth=2; cmx.stroke();
+    // Current position dot
+    const lx=ex(xs[xs.length-1]), ly=ey(ys[ys.length-1]);
+    cmx.fillStyle='#fff'; cmx.beginPath(); cmx.arc(lx,ly,4,0,7); cmx.fill();
+    cmx.fillStyle='#ffc107'; cmx.beginPath(); cmx.arc(lx,ly,2.5,0,7); cmx.fill();
+    // Section label
+    cmx.fillStyle='#5b6b7f'; cmx.font='10px system-ui'; cmx.textAlign='left';
+    cmx.fillText('โปรไฟล์ระดับความสูง (m)',PL+4,MAP_H+PT+12);
+  } else {
+    cmx.fillStyle='#5b6b7f'; cmx.font='12px system-ui'; cmx.textAlign='center';
+    cmx.fillText('โปรไฟล์ระดับความสูง — เริ่มต้นเซสชันเพื่อดูข้อมูล',W/2,MAP_H+ELV_H/2);
+  }
+}
+
+// ============================================================
+//  PEDAL TORQUE POLAR DIAGRAM  (cycling only)
+//  Radius = crank torque at that angle. Green = drives the bike,
+//  red = negative torque the other leg must overcome.
+// ============================================================
+const pc=document.getElementById('polar'), px=pc.getContext('2d');
+const polarBuf=new Array(72).fill(0);      // 5-degree bins
+function drawPolar(curPhase){
+  const W=pc.width,H=pc.height,cx=W/2,cy=H/2,R=Math.min(W,H)/2-34;
+  px.clearRect(0,0,W,H);
+  px.fillStyle='#0f151d'; px.fillRect(0,0,W,H);
+  // grid rings + angle labels
+  px.strokeStyle='rgba(255,255,255,.07)'; px.lineWidth=1;
+  for(let i=1;i<=3;i++){ px.beginPath(); px.arc(cx,cy,R*i/3,0,7); px.stroke(); }
+  px.strokeStyle='rgba(255,255,255,.05)';
+  for(let a=0;a<360;a+=45){ const r=(a-90)*Math.PI/180;
+    px.beginPath(); px.moveTo(cx,cy); px.lineTo(cx+Math.cos(r)*R,cy+Math.sin(r)*R); px.stroke(); }
+  px.fillStyle='#5b6b7f'; px.font='10px ui-monospace,monospace'; px.textAlign='center';
+  px.fillText('0° TDC',cx,cy-R-12); px.fillText('180° BDC',cx,cy+R+18);
+  px.fillText('90°',cx+R+16,cy+4); px.fillText('270°',cx-R-18,cy+4);
+
+  const peak=Math.max(20,...polarBuf.map(Math.abs));
+  // filled torque curve
+  for(const sign of [1,-1]){
+    px.beginPath(); let started=false;
+    for(let i=0;i<=72;i++){
+      const t=polarBuf[i%72], v=sign>0?Math.max(0,t):Math.min(0,t);
+      const rad=(i*5-90)*Math.PI/180, rr=Math.abs(v)/peak*R;
+      const x=cx+Math.cos(rad)*rr, y=cy+Math.sin(rad)*rr;
+      if(!started){px.moveTo(x,y);started=true;} else px.lineTo(x,y);
+    }
+    px.closePath();
+    px.fillStyle   = sign>0?'rgba(0,200,111,.28)':'rgba(248,81,73,.32)';
+    px.strokeStyle = sign>0?'#00c86f':'#f85149';
+    px.lineWidth=2; px.fill(); px.stroke();
+  }
+  // crank arm at current angle
+  const cr=(curPhase*360-90)*Math.PI/180;
+  px.strokeStyle='#4a9eff'; px.lineWidth=3;
+  px.beginPath(); px.moveTo(cx,cy); px.lineTo(cx+Math.cos(cr)*R,cy+Math.sin(cr)*R); px.stroke();
+  px.fillStyle='#4a9eff'; px.beginPath(); px.arc(cx+Math.cos(cr)*R,cy+Math.sin(cr)*R,5,0,7); px.fill();
+  px.fillStyle='#8b98a8'; px.beginPath(); px.arc(cx,cy,4,0,7); px.fill();
+  px.fillStyle='#5b6b7f'; px.font='10px system-ui'; px.textAlign='left';
+  px.fillText(`peak ${Math.round(peak)} N·m`,8,H-8);
+}
+
+// ============================================================
+//  ANALYSIS — same rule set as PressureAnalyzer / CyclingAnalyzer
+// ============================================================
+function analyse(){
+  if(hist.length<12) return null;
+  const win=hist.slice(-Math.max(20,Math.min(120,hist.length)));
+  const pk=k=>Math.max(...win.map(f=>f[k]));
+  const heelP=pk('h'), flP=pk('fl'), frP=pk('fr'), toeP=pk('t');
+  const total=heelP+flP+frP+toeP||1;
+  const heelShare=Math.round(heelP/total*100);
+  const toeShare =Math.round(toeP /total*100);
+  const m={heel:heelShare, toe:toeShare};
+
+  if(sport==='run'){
+    const bias=Math.abs(flP-frP)/((flP+frP)||1);
+    m.sym=Math.round(Math.max(0,100-bias*200));
+    m.cad=+document.getElementById('rate').value;
+    m.imp=Math.round(heelP/MAX*100);
+    // Use heel-vs-forefoot ratio for strike type (more accurate than share of total)
+    const ffP=Math.max(flP,frP);
+    m.type = heelP>ffP*1.5?'Heel Striker' : heelP>ffP*0.5?'Midfoot Striker' : 'Forefoot Striker';
+  } else {
+    const T=win.map(f=>f.trq??0);
+    const peak=Math.max(...T.map(Math.abs))||1;
+    const mean=T.reduce((a,b)=>a+b,0)/T.length;
+    m.smo=Math.round(Math.max(0,mean/peak*100));
+    const pos=T.filter(v=>v>0).reduce((a,b)=>a+b,0);
+    const neg=T.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
+    m.eff=Math.round(pos/((pos+neg)||1)*100);
+    m.pwr=Math.round(win.slice(-10).reduce((a,f)=>a+(f.pwr||0),0)/Math.min(10,win.length));
+    m.fpk=Math.round(Math.max(...win.map(f=>f.fn||0)));
+    m.trqpk=+peak.toFixed(1);
+    m.type = m.smo>=20&&m.eff>=75 ? 'Round Stroke' : m.eff<70 ? 'Mashing' : 'Uneven Stroke';
+  }
+
+  // score = fraction of targets met, weighted toward the primary two
+  const tg=TARGETS[sport];
+  let score=0, w=0;
+  tg.forEach(t=>{ const wt=t.w||1; w+=wt; if(t.test(m[t.key])) score+=wt; });
+  m.score=Math.round(score/w*100);
+  return m;
+}
+
+// ============================================================
+//  METRIC TILES — different set per sport
+// ============================================================
+const METRICS={
+  run:[
+    {id:'mPace',label:'Pace',       unit:'/km', get:d=>d?`${Math.floor(d.pace)}:${String(Math.round((d.pace%1)*60)).padStart(2,'0')}`:'--:--'},
+    {id:'mCad', label:'Cadence',    unit:'spm', get:d=>d?d.cad:'0'},
+    {id:'mDist',label:'Distance',   unit:'km',  get:d=>d?d.dist.toFixed(2):'0.00'},
+    {id:'mSpd', label:'Speed',      unit:'km/h',get:d=>d?d.spd.toFixed(1):'0.0'},
+  ],
+  cycle:[
+    {id:'mPwr', label:'Power',      unit:'W',   get:d=>d?d.pwr:'0'},
+    {id:'mCad', label:'Cadence',    unit:'rpm', get:d=>d?d.cad:'0'},
+    {id:'mFn',  label:'Pedal Force',unit:'N',   get:d=>d?d.fn:'0'},
+    {id:'mTrq', label:'Crank Torque',unit:'N·m',get:d=>d?d.trq.toFixed(1):'0.0'},
+  ]
+};
+const metEl=document.getElementById('metrics');
+function buildMetrics(){
+  metEl.innerHTML=METRICS[sport].map(m=>
+    `<div class="m"><label>${m.label}</label><div class="v" id="${m.id}">--</div><span class="u">${m.unit}</span></div>`).join('');
+}
+function renderMetrics(d){
+  for(const m of METRICS[sport]) document.getElementById(m.id).textContent=m.get(d);
+}
+
+// ============================================================
+//  TARGETS TABLE  — live value vs target, pass/fail per row
+// ============================================================
+const tgtEl=document.getElementById('tgt');
+function renderTargets(m){
+  tgtEl.innerHTML=TARGETS[sport].map(t=>{
+    const v=m?m[t.key]:null;
+    const ok=v!=null&&t.test(v);
+    return `<tr>
+      <td>${t.label}</td>
+      <td class="mono">${v!=null?v+t.unit:'—'}</td>
+      <td class="mono" style="color:#8b98a8">${t.want}</td>
+      <td>${v==null?'<span style="color:#5b6b7f">—</span>'
+        :ok?'<span class="ok">✓ pass</span>':'<span class="no">✗ fail</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+//  BLE PAYLOAD LOG
+// ============================================================
+const logEl=document.getElementById('log');
+function logFrame(d){
+  const {_phase,...wire}=d;                 // _phase is internal only
+  const line=document.createElement('div');
+  line.className='ln';
+  line.textContent=`notify ▸ ${JSON.stringify(wire)}`;
+  logEl.prepend(line);
+  while(logEl.childElementCount>30) logEl.lastElementChild.remove();
+}
+
+// ============================================================
+//  MAIN TICK — one simulated BLE notification
+// ============================================================
+function tick(){
+  tick_++;
+  const d=synth();
+  hist.push(d); if(hist.length>300) hist.shift();
+  path.push([d.lat,d.lng]); if(path.length>900) path.shift();
+  if(d.elev!==undefined){
+    if(lastElev!==null && d.elev>lastElev) elevGain+=d.elev-lastElev;
+    lastElev=d.elev;
+    elevPath.push([d.dist,d.elev]); if(elevPath.length>900) elevPath.shift();
+  }
+
+  // polar torque accumulator (cycling): bin by crank angle
+  if(sport==='cycle'){
+    const bin=Math.floor(d._phase*72)%72;
+    polarBuf[bin]=polarBuf[bin]*0.6+(d.trq||0)*0.4;   // smooth over laps
+  }
+
+  drawFoot(d);
+  for(const z of ZONES) document.getElementById('z_'+z.key).textContent=d[z.key];
+  renderMetrics(d);
+
+  const m=analyse();
+  if(m){
+    document.getElementById('sLabel').textContent=m.type;
+    document.getElementById('sNum').textContent=m.score;
+    drawRing(m.score);
+    renderTargets(m);
+    const fails=TARGETS[sport].filter(t=>!t.test(m[t.key]));
+    document.getElementById('sFeed').textContent = fails.length===0
+      ? preset.text
+      : `${preset.text}  ▸ Off target: ${fails.map(f=>f.label).join(', ')}.`;
+  }
+
+  if(sport==='cycle'){
+    drawPolar(d._phase);
+    if(tick_%3===0) drawCycleMap();
+    document.getElementById('formula').innerHTML=
+      `<b>Pedal force → power, computed live</b><br>`+
+      `F<sub>normal</sub> = (H+FL+FR+T) / (4×4095) × ${F_FULL} N = <b>${d.fn} N</b><br>`+
+      `θ = ${Math.round(d._phase*360)}° &nbsp; F<sub>tan</sub> = F<sub>normal</sub> × sin θ = <b>${d.ftan} N</b><br>`+
+      `τ = F<sub>tan</sub> × ${CRANK} m = <b>${d.trq} N·m</b><br>`+
+      `P = τ̄ × ω × 2 legs = <b>${d.pwr} W</b> &nbsp;(ω = ${d.cad} rpm)`;
+  } else if(tick_%3===0) drawMap();
+
+  if(tick_%5===0) logFrame(d);
+}
+
+// ============================================================
+//  CONTROLS
+// ============================================================
+const btn=document.getElementById('btn');
+function setConn(on){
+  document.getElementById('dot').className='dot'+(on?' on':'');
+  document.getElementById('connTxt').textContent=on?'Connected — SmartInsole_01':'Disconnected';
+  btn.textContent=on?'Stop':'Start';
+  btn.className=on?'stop':'';
+}
+btn.onclick=()=>{
+  running=!running; setConn(running);
+  if(running) timer=setInterval(tick,HZ); else clearInterval(timer);
+};
+
+function softReset(){
+  tick_=0; dist=0; path=[]; hist=[]; torqueBuf=[]; polarBuf.fill(0);
+  elevPath=[]; elevGain=0; lastElev=null;
+  logEl.innerHTML='';
+  document.getElementById('sLabel').textContent='—';
+  document.getElementById('sNum').textContent='--';
+  document.getElementById('sFeed').textContent=preset.text;
+  for(const z of ZONES) document.getElementById('z_'+z.key).textContent='0';
+  renderMetrics(null); renderTargets(null);
+  drawFoot(null); drawRing(null);
+  if(sport==='cycle') drawPolar(0); else drawMap();
+}
+document.getElementById('reset').onclick=()=>{
+  clearInterval(timer); running=false; setConn(false); softReset();
+};
+
+// ---- verdict banner ----------------------------------------
+function showVerdict(){
+  const v=document.getElementById('verdict');
+  v.className='verdict '+(preset.good?'good':'bad');
+  document.getElementById('vIco').textContent=preset.good?'✓':'✗';
+  document.getElementById('vTitle').textContent=preset.title;
+  document.getElementById('vText').textContent=preset.text;
+}
+
+// ---- preset dropdown ---------------------------------------
+const presetSel=document.getElementById('preset');
+function buildPresets(){
+  presetSel.innerHTML=PRESETS[sport].map((p,i)=>
+    `<option value="${i}">${p.name}</option>`).join('');
+  presetSel.value='0';
+}
+presetSel.onchange=()=>{
+  preset=PRESETS[sport][+presetSel.value];
+  document.getElementById('rate').value=preset.rate;
+  showRate(); showVerdict(); softReset();
+};
+
+// ---- rate slider -------------------------------------------
+const rateSlider=document.getElementById('rate');
+function showRate(){
+  document.getElementById('rateVal').textContent=
+    rateSlider.value+(sport==='run'?' spm':' rpm');
+}
+rateSlider.oninput=showRate;
+
+// ============================================================
+//  SPORT SWITCH — swaps presets, metrics, targets, viz
+// ============================================================
+function setSport(s){
+  clearInterval(timer); running=false; setConn(false);
+  sport=s;
+  document.getElementById('spRun').className='sport'+(s==='run'?' act':'');
+  document.getElementById('spCyc').className='sport'+(s==='cycle'?' act':'');
+
+  const isRun=s==='run';
+  document.getElementById('rateLbl').textContent=isRun?'Cadence':'Cadence';
+  rateSlider.min=isRun?150:60;
+  rateSlider.max=isRun?200:110;
+
+  buildPresets();
+  preset=PRESETS[s][0];
+  rateSlider.value=preset.rate;
+
+  document.getElementById('map').style.display      = isRun?'block':'none';
+  document.getElementById('polar').style.display    = isRun?'none':'block';
+  document.getElementById('formula').style.display  = isRun?'none':'block';
+  document.getElementById('cycleMap').style.display = isRun?'none':'block';
+  document.getElementById('vizTitle').textContent = isRun?'GPS Track':'Pedal Torque vs Crank Angle  ·  เส้นทาง & ระยะไต่เขา';
+  document.getElementById('footTitle').textContent= isRun?'Live Pressure Heatmap — Foot Strike':'Live Pressure Heatmap — Pedal Contact';
+  document.getElementById('footHint').textContent = isRun
+    ? 'Green = light load, red = heavy load. Raw 12-bit ADC (0–4095).'
+    : 'Forefoot zones sit over the pedal spindle. Heel should stay light — a heavy heel means the ankle has collapsed.';
+  document.getElementById('scoreTitle').textContent=isRun?'Running Quality Analysis':'Pedalling Efficiency Analysis';
+
+  buildMetrics(); showRate(); showVerdict(); softReset();
+}
+document.getElementById('spRun').onclick=()=>setSport('run');
+document.getElementById('spCyc').onclick=()=>setSport('cycle');
+
+// ---- boot ---------------------------------------------------
+setSport('run');
+</script>
+</body>
+</html>

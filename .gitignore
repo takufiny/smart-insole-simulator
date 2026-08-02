@@ -1,0 +1,21 @@
+# scratch copies of the simulator built section-by-section
+smart_insole_project/sim_p*.html
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+pubspec.lock
+
+# Arduino
+*.bin
+*.elf
+*.hex
+
+# OS
+.DS_Store
+Thumbs.db
